@@ -1,0 +1,6 @@
+print (3 ,4)
+if (true == 1) {
+    print(143*32)
+    # comment here
+    print("this is (string)")
+}
