@@ -1,0 +1,5 @@
+value = 334.47
+bool = true 
+negative = -39
+notreference = negative
+notbool = !bool
