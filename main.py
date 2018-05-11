@@ -1,10 +1,10 @@
-from Lexer import Lexer
-from AST import AST
+from src.Lexer import Lexer
+from src.AST import AST
 from pprint import pprint
 
 lexer = Lexer()
-lexer.lex_file('./test/assign.plw')
-#pprint(lexer.tokens)
+lexer.lex_file('test/Lexer_test.plw')
+pprint(lexer.tokens)
 
 tree = AST(lexer.tokens)
 if not tree.parse():
