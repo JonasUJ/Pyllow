@@ -1,8 +1,8 @@
 '''Node class and all subclasses'''
 
-from chardef import CD
-from Datatype import *
-from Error import *
+from .chardef import CD
+from .Datatype import *
+from .Error import *
 
 class Node:
     '''Base Node class'''

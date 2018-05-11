@@ -1,7 +1,9 @@
 '''Datatype base class'''
 
-from chardef import CD
-from Error import *
+
+from .chardef import CD
+from .Error import *
+
 
 class Datatype:
     '''Datatype base class'''
@@ -48,6 +50,13 @@ class Datatype:
     def __repr__(self):
         return f'<{self.__class__.__name__}: value={self.value}>'
 
+    def __eq__(self, other):
+        return self.value == other.value
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
+
 class Float(Datatype):
     '''Float datatype'''
 
@@ -67,7 +76,7 @@ class Float(Datatype):
                 return other.__class__(self._add_(other.value), self.position)
             return self.__class__(self._add_(other.value), self.position)
         except TypeError:
-            self._typeerror(other, '+')
+            self._typeerror(other, CD.PLUS)
 
     def __sub__(self, other):
         try:
@@ -75,7 +84,7 @@ class Float(Datatype):
                 return other.__class__(self._sub_(other.value), self.position)
             return self.__class__(self._sub_(other.value), self.position)
         except TypeError:
-            self._typeerror(other, '-')
+            self._typeerror(other, CD.MINUS)
         
     def __mul__(self, other):
         try:
@@ -83,13 +92,13 @@ class Float(Datatype):
                 return other.__class__(self._mul_(other.value), self.position)
             return self.__class__(self._mul_(other.value), self.position)
         except TypeError:
-            self._typeerror(other, '*')
+            self._typeerror(other, CD.ASTERISK)
         
     def __truediv__(self, other):
         try:
             return Float(self._div_(other.value), self.position)
         except TypeError:
-            self._typeerror(other, '/')
+            self._typeerror(other, CD.DIVISION)
         except ZeroDivisionError:
             raise PyllowZeroDivisionError('Division by zero', self.position)
         
@@ -99,8 +108,9 @@ class Float(Datatype):
                 other.__class__(self._pow_(other.value), self.position)
             return self.__class__(self._pow_(other.value), self.position)
         except TypeError:
-            self._typeerror(other, '^')
+            self._typeerror(other, CD.POWER)
 
+    # Weird name becasue __bool__ must return True/False
     def _fBool(self):
         return Bool(self._bool_(), self.position)
 

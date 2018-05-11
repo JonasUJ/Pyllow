@@ -2,8 +2,8 @@
 
 from os.path import realpath
 
-from chardef import COMMENT, STRING, NUMBERS, ALLCHARS, ALLCHARSCLEAN, WHITESPACE
-from Stream import Stream
+from .chardef import COMMENT, STRING, NUMBERS, ALLCHARS, ALLCHARSCLEAN, WHITESPACE
+from .Stream import Stream
 
 
 class RawStream(Stream):
@@ -21,16 +21,33 @@ class RawStream(Stream):
             self._lineno += 1
             self._columnno = 0
         super().next()
+        return self._stream[self._i] if self.is_not_finished else None
 
     def prev(self):
         super().prev()
         self._columnno -= 1
         if self.current == '\n':
             self._lineno -= 1
-            self._columnno = 0
+            _x = 1
+            cur = self._stream[self._i - _x]
+            while cur != '\n' and _x < self._i:
+                _x += 1
+                cur = self._stream[self._i - _x]
+            self._columnno = _x
+        return self._stream[self._i] if self._i > 0 else None
 
-    def position(self, backtrack_lineno=0, backtrack_columnno=0):
-        return self._lineno - backtrack_lineno, self._columnno - backtrack_columnno, self.path
+    def skip(self, amount):
+        '''Skip `amount` items forward and return the current item'''
+
+        if amount < 0:
+            raise ValueError('Amount must be greater than 0')
+        
+        for _ in range(amount):
+            self.next()
+        return self.current
+
+    def position(self):
+        return self._lineno, self._columnno, self.path
 
 
 class Token:
@@ -45,8 +62,14 @@ class Token:
     def __repr__(self):
         return f'<{self.__class__.__name__}: position={self.position}, type="{self.type}", value="{self.value}">'
 
-    __str__ = __repr__
+    def __eq__(self, other):
+        return self.position == other.position and \
+            self.type == other.type and \
+            self.value == other.value and \
+            self._subtype == other._subtype
 
+    def __ne__(self, other):
+        return not self.__eq__(other)
 
 class Lexer:
     '''Lexer class'''
@@ -59,19 +82,39 @@ class Lexer:
         self.tokens.append(token)
         self.tok = str()
         self.couldbenum = True
-        print('added:', token)
+        #print('added:', token)
 
-    def lex_file(self, path):
-        '''Read a file and lex raw text'''
+    def lex_file(self, path, error_path=None):
+        '''
+        Read a file and lex raw text
+        
+        Parameters
+        ----------
+        path
+            Location of file
+        error_path
+            The path saved to every token, leave out to use `path`
+        '''
 
         with open(path) as fp:
             raw = fp.read()
             path = realpath(fp.name)
 
-        return self.lex(raw, path=path)
+        error_path = error_path or path
+
+        return self.lex(raw, path=error_path)
 
     def lex(self, raw, path=None):
-        '''Lex raw text'''
+        '''
+        Lex raw text
+        
+        Parameters
+        ----------
+        raw
+            String of characters
+        path
+            The path saved to every token
+        '''
 
         self.tokens.clear()
 
@@ -110,7 +153,7 @@ class Lexer:
 
             self.tok += stream.current
 
-            print('chr:', stream.current, '| tok:', self.tok+'|')
+            #print('chr:', stream.current, '| tok:', self.tok+'|')
 
             if len(self.tok) == 1 and not self.tok.isdigit():
                 self.couldbenum = False

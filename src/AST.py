@@ -1,10 +1,10 @@
 '''Abstract Syntax Tree and Nodes'''
 
-from Stream import Stream
-from chardef import CD, PRECEDENCE
-from Datatype import *
-from Error import *
-from Node import *
+from .Stream import Stream
+from .chardef import CD, PRECEDENCE
+from .Datatype import *
+from .Error import *
+from .Node import *
 
 
 class TokenStream(Stream):
