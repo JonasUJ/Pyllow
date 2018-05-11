@@ -9,22 +9,23 @@ ERROR_MSG = '''
 {msg}
 '''
 
-def error(err):
+def error(err, prints=True):
     '''Print an error msg formatted to ERROR_MSG from `err`'''
 
     with open(err.position[2]) as fp:
         line = fp.readlines()[err.position[0]-1].strip('\n')
 
-    print(
-        ERROR_MSG.format(
-            line=line,
-            col=' '*(err.position[1]-1),
-            lineno=err.position[0],
-            path=err.position[2],
-            error=err.__class__.__name__,
-            msg=err.errormsg
-        )
+    error_formatted = ERROR_MSG.format(
+        line=line,
+        col=' '*(err.position[1]),
+        lineno=err.position[0],
+        path=err.position[2],
+        error=err.__class__.__name__,
+        msg=err.errormsg
     )
+
+    if prints: print(error_formatted)
+    return error_formatted
 
 
 class PyllowException(Exception):

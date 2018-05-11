@@ -9,6 +9,8 @@ class Stream:
 
     @property
     def current(self):
+        if self._i < 0:
+            return
         return self._stream[self._i]
 
     @property
@@ -41,6 +43,9 @@ class Stream:
 
     def peek_prev(self, x=1):
         '''Return previous item in stream without decreasing internal counter'''
+
+        if self._i < x:
+            return
 
         try:
             return self._stream[self._i - x]
