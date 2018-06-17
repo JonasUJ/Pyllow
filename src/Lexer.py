@@ -7,17 +7,28 @@ from .Stream import Stream
 
 
 class RawStream(Stream):
-    '''RawStream for ASCII source code'''
+    '''
+    RawStream for ASCII/UTF-8 source code
 
-    def __init__(self, *args,  path=None, **kwargs):
+    Parameters
+    ----------
+    path : str
+        The path to the file
+    newlinechar : str
+        The character that introduces a new line, default is '\n'
+        cannot be multiple characters like '\r\n' or '\n\r'
+    '''
+
+    def __init__(self, *args,  path=None, newlinechar='\n', **kwargs):
         super().__init__(*args, **kwargs)
         self._lineno = 1
         self._columnno = -1
         self.path = path
+        self.newlinechar = newlinechar
 
     def next(self):
         self._columnno += 1
-        if self.current == '\n':
+        if self.current == self.newlinechar:
             self._lineno += 1
             self._columnno = 0
         super().next()
@@ -26,11 +37,11 @@ class RawStream(Stream):
     def prev(self):
         super().prev()
         self._columnno -= 1
-        if self.current == '\n':
+        if self.current == self.newlinechar:
             self._lineno -= 1
             _x = 1
             cur = self._stream[self._i - _x]
-            while cur != '\n' and _x < self._i:
+            while cur != self.newlinechar and _x < self._i:
                 _x += 1
                 cur = self._stream[self._i - _x]
             self._columnno = _x
@@ -51,7 +62,23 @@ class RawStream(Stream):
 
 
 class Token:
-    '''Token class'''
+    '''
+    Token class that contains information on tokens in
+    the source code
+
+    Parameters
+    ----------
+    position : tuple
+        A 3 length tuple with the line number, column number and filename
+        of the token
+    type : str
+        Type of the token
+    subtype : str
+        Subtype of the token, for when the type is not specific enough
+        e.g. 'num' could be either 'int' or 'float'
+    value : str
+        The value of the token
+    '''
     
     def __init__(self, **kwargs):
         self.position = kwargs.pop('position')
@@ -113,7 +140,12 @@ class Lexer:
         raw
             String of characters
         path
-            The path saved to every token
+            The path saved to every token in their position attribute
+
+        Returns
+        -------
+        list : List[Token]
+            A list of `Token`s
         '''
 
         self.tokens.clear()

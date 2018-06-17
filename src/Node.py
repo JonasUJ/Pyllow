@@ -1,11 +1,26 @@
 '''Node class and all subclasses'''
 
 from .chardef import CD
-from .Datatype import *
-from .Error import *
+from .Datatype import Float, Integer, Bool
+from .Error import PyllowNameError, PyllowSyntaxError
 
 class Node:
-    '''Base Node class'''
+    '''
+    Base Node class that makes up all of the tree
+    Used for subclassing and testing, there wont be a pure
+    `Node` object in the tree
+
+    Parameters
+    ----------
+    parent : Node
+        The `Node` that has this `Node` in its `children` list
+    children : list
+        A list of `Node`s that are below this `Node` in the tree
+    position : tuple
+        A 3 length tuple with the line number, column number 
+        and filename describing where this `Node` is located in
+        the source code
+    '''
 
     _IS_SCOPE = True
 
@@ -16,46 +31,118 @@ class Node:
         self.position = kwargs.pop('position', None)
         self._scope = dict()
 
-    def pprint_list(self):
-        '''Return a Pretty-Printable list'''
+    def pprint_list(self, include_self=True) -> list:
+        '''
+        Return a Pretty-Printable list of the tree structure
 
-        l = list()
+        Parameters
+        ----------
+        include_self : bool
+            Whether or not to include self in the returned list.
+            Defaults to `True`
+
+        Returns
+        -------
+        list
+            A list of all children and their children etc.
+        '''
+
+        l = [self] if include_self else list()
         for child in self.children:
             l.append(child)
-            cpl = child.pprint_list()
+            cpl = child.pprint_list(False)
             if cpl:
                 l.append(cpl)
         return l
 
-    def add_child(self, child):
-        '''Add `child` to Node.children'''
+    def add_child(self, child) -> None:
+        '''
+        Add `child` to `Node.children`
+        
+        Parameters
+        ----------
+        child : Node
+            The new child to add as a `Node`
+        '''
 
         self.children.append(child)
 
-    def isleaf(self):
-        '''A Node is a leaf if it has no children'''
+    def isleaf(self) -> bool:
+        '''
+        A `Node` is a leaf if it has no children
 
+        Returns
+        -------
+        bool
+            `True` if the `Node` is a leaf, `False` otherwise
+        '''
+ 
         return not len(self.children)
 
-    def scope_set(self, _id, value):
-        '''Change the value of `_id` in the current scope'''
+    def scope_set(self, _id:str, value):
+        '''
+        Change the value of `_id` in the current scope
+        
+        Parameters
+        ----------
+        _id : str
+            The identity of the scope item as a string
+        value
+            The new value for the `_id`
 
-        return self.parent._update_scope(_id, value)
+        Returns
+        -------
+        value
+            The value passed in the `value` parameter
+        '''
 
-    def scope_get(self, _id, orig=None):
-        '''Retrieve `_id` from the current scope'''
+        return self._update_scope(_id, value)
 
+    def scope_get(self, _id:str, orig=None):
+        '''
+        Retrieve `_id` from the current scope
+        
+        Parameters
+        ----------
+        _id : str
+            The identity of the scope item as a string
+        orig : Optional
+            Use this if the origin of the `scope_get` call is not `self`
+
+        Returns
+        -------
+        value
+            The value of `_id` in the current scope
+
+        Raises
+        ------
+        PyllowNameError
+            if `_id` is not defined
+        '''
+
+        orig = orig or self
         if self._IS_SCOPE and _id in self._scope:
             return self._scope[_id]
         elif self.parent:
-            return self.parent.scope_get(_id, orig or self)
-        print(orig)
+            return self.parent.scope_get(_id, orig)
         raise PyllowNameError(f'Name "{_id}" is not defined', orig.position)
 
-    def _update_scope(self, _id, value):
+    def _update_scope(self, _id:str, value):
         '''
-        Checks, and updates, if this should update it's scope
-        because not all Nodes should store a scope (like a loop)
+        Checks if this should update its scope and then updates it.
+        This is necessary because not all Nodes should store a scope (e.g. a loop)
+
+        Parameters
+        ----------
+        _id : str
+            The identity of the scope item as a string
+        value
+            The new value for the `_id`
+
+        Returns
+        -------
+        value
+            The value passed in the `value` parameter
         '''
 
         if self._IS_SCOPE:
@@ -63,18 +150,38 @@ class Node:
             return value
         return self.parent._update_scope(_id, value)
 
-    def _set_parents(self):
-        '''Sets the correct parent for all nodes in the tree'''
+    def _set_parents(self) -> None:
+        '''
+        Sets the correct parent for all nodes in the tree
+        '''
 
         for child in self.children:
             child._set_parents()
             child.parent = self
 
     def process(self):
+        '''
+        Raises `NotImplementedError`
+        It is supposed to be overwritten when subclassing
+        '''
+
         raise NotImplementedError()
 
     def __repr__(self):
         return f'<{self.__class__.__name__}: len(children)={len(self.children)}>'
+
+    def __eq__(self, other):
+        '''
+        Only tests equality in structure, not in value
+        '''
+
+        return self.__class__ == other.__class__ and \
+            len(self.children) == len(other.children) and \
+            all(x == y for x, y in \
+            zip(self.children, other.children))
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
 
     
 class TopNode(Node):
@@ -109,7 +216,10 @@ class Statement(Node):
 
 
 class BinaryExpression(Expression):
-    '''BinaryExpression class for binary expressions'''
+    '''
+    BinaryExpression class for binary expressions
+    lhs and rhs will be the first and second children
+    '''
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -118,6 +228,31 @@ class BinaryExpression(Expression):
 
     @classmethod
     def make(cls, lhs, op, rhs, *args, **kwargs):
+        '''
+        Decide what subclass belongs to the `op` symbol
+        and return an that object instantiated with 
+        `lhs`, `rhs`, `args` and `kwargs`  
+
+        Parameters
+        ----------
+        lhs
+            The left hand operator
+        op
+            The operator symbol
+        rhs
+            The right hand operator
+
+        Returns
+        -------
+        BinaryExpression
+            Or rather a subclass thereof based on `op`
+
+        Raises
+        ------
+        KeyError
+            If there is no subclass associated with `op`
+        '''
+
         return {
             CD.PLUS:AdditionExpression,
             CD.MINUS:SubtractionExpression,
@@ -138,21 +273,98 @@ class BinaryExpression(Expression):
         return f'<{self.__class__.__name__}: left="{self.left.__class__.__name__}", right="{self.right.__class__.__name__}">'
 
 
-def exprify(token):
+def exprify(token) -> Expression:
+    '''
+    Make a `MonoExpression` from a `Token`
+
+    Parameters
+    ----------
+    token
+        This is either a `Token` or an `Expression`
+
+    Returns
+    -------
+    MonoExpression
+        made from the `token` parameter
+
+    Raises
+    ------
+    PyllowSyntaxError
+        If the token.type is not `MonoExpression`able
+    '''
+
     if not isinstance(token, Expression):
-        return MonoExpression(token, position=token.position)
+        return MonoExpression.make(token)
     return token
 
-class MonoExpression(Expression):
-    '''For leaf expression nodes'''
 
-    def __init__(self, token, *args, **kwargs):
+class MonoExpression(Expression):
+    '''
+    For leaf expression nodes like numbers and identities
+
+    Parameters
+    ----------
+    value : str
+        The value of the `MonoExpression`, be it a number or identifier
+    tokentype : str
+        The type of the token, could be 'num', 'bool', etc
+    subtype : str
+        The `Token._subtype`, only necessary when `tokentype` is not
+        specific enough, e.g. 'num' could be either 'int' or 'float'
+
+    Raises
+    ------
+    PyllowSyntaxError
+        If there is no `MonoExpression` associated with `tokentype`
+    '''
+
+    ALLOWED_TYPES = ('bool', 'int', 'float', 'str', 'id')
+
+    def __init__(self, value, tokentype=None, subtype=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.value = token.value
+        self.value = value
         self.children = list()
-        self.type = token._subtype or token.type
+        self.type = subtype or tokentype
+        if self.type not in self.ALLOWED_TYPES:
+            raise PyllowSyntaxError('Invalid syntax', self.position)
+
+    @classmethod
+    def make(cls, token, *args, **kwargs) -> Expression:
+        '''
+        Make a MonoExpression from a `Token` object instead of
+        passing the parameters manually
+
+        Parameters
+        ----------
+        token : Token
+            A `Token` to extract relevant information from which 
+            makes generating a `MonoExpression` much easier
+
+        Returns
+        -------
+        MonoExpression
+            Instantiated from the `Token` passed in the `token`
+            parameter
+
+        Raises
+        ------
+        PyllowSyntaxError
+            If there is no `MonoExpression` associated with `token.type`
+        '''
+
+        return MonoExpression(
+            value=token.value,
+            tokentype=token.type,
+            subtype=token._subtype,
+            position=token.position,
+            *args, **kwargs 
+        )
 
     def process(self):
+        '''
+        Return the relevant datatype for this `MonoExpression`
+        '''
+
         return {
             'bool':lambda o: Bool(o.value, o.position),
             'int':lambda o: Integer(o.value, o.position),
@@ -166,28 +378,28 @@ class MonoExpression(Expression):
 
 
 class AdditionExpression(BinaryExpression):
-    '''AdditionExpression for addition expressions'''
+    '''AdditionExpression for additive expressions'''
 
     def _op(self, lhs, rhs):
         return lhs + rhs
 
 
 class SubtractionExpression(BinaryExpression):
-    '''SubtractionExpression for subtraction expressions'''
+    '''SubtractionExpression for subtractive expressions'''
 
     def _op(self, lhs, rhs):
         return lhs - rhs
 
 
 class MultiplicationExpression(BinaryExpression):
-    '''MultiplicationExpression for multiplication expressions'''
+    '''MultiplicationExpression for multiplicative expressions'''
 
     def _op(self, lhs, rhs):
         return lhs * rhs
 
 
 class DivisionExpression(BinaryExpression):
-    '''DivisionExpression for division expressions'''
+    '''DivisionExpression for divisive expressions'''
 
     def _op(self, lhs, rhs):
         return lhs / rhs
@@ -201,7 +413,14 @@ class PowerExpression(BinaryExpression):
 
 
 class UnaryExpression(Expression):
-    '''For unary expressions'''
+    '''
+    For unary expressions
+    
+    Parameters
+    ----------
+    value
+        Value of the unary expression before it has been processed
+    '''
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -215,7 +434,26 @@ class UnaryExpression(Expression):
         return self._op(self.value)
 
     @classmethod
-    def make(self, op, *args, **kwargs):
+    def make(cls, op, *args, **kwargs):
+        '''
+        Return one of the `UnaryExpression` subclasses based on `op`
+
+        Parameters
+        ----------
+        op : str
+            The operator symbol as a string
+
+        Returns
+        -------
+        UnaryExpression
+            Based on `op`
+
+        Raises
+        ------
+        KeyError
+            if `op` has no associated `UnaryExpression`
+        '''
+
         return {
             CD.NOT:NotExpression,
             CD.PLUS:PositiveExpression,
@@ -261,7 +499,14 @@ class CallExpression(Expression):
 
 
 class AssignStatement(Statement):
-    '''For variable assignment'''
+    '''
+    For variable assignment
+    
+    Parameters
+    ----------
+    identity : str
+        The identity of the variable
+    '''
 
     _IS_SCOPE = False
 
