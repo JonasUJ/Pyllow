@@ -46,6 +46,10 @@ PRECEDENCE = {
     CD.ATTRIBUTE: 30
 }
 
+RIGHT_ASSOC = (
+    CD.POWER,
+)
+
 OPERATORS = _split(('+', '-', '*', '/', '^', '<', '>', '<=', '>=', '==', '!=', '&', '|', '!', '.'), 'op')
 ENCAPSULATORS = ('(', 'LPAREN'), (')', 'RPAREN'), ('{', 'BLOCKSTART'), ('}', 'BLOCKEND'), ('[', 'LISTSTART'), (']', 'LISTEND')
 RESERVED_KEYWORDS = _double(('if', 'else', 'null'))

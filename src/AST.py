@@ -1,10 +1,11 @@
 '''Abstract Syntax Tree and Nodes'''
 
+from .chardef import CD, PRECEDENCE, RIGHT_ASSOC
+from .Datatype import Bool, Float, Integer
+from .Error import PyllowException, PyllowSyntaxError, error
+from .Node import (AssignStatement, BinaryExpression, CallExpression,
+                   Expression, TopNode, UnaryExpression, exprify)
 from .Stream import Stream
-from .chardef import CD, PRECEDENCE
-from .Datatype import *
-from .Error import *
-from .Node import *
 
 
 class TokenStream(Stream):
@@ -49,12 +50,12 @@ class AST:
 
     def _expect(self, *values, attr='type'):
 
-        if (self._accept(*values, attr)):
+        if self._accept(*values, attr=attr):
             return True
 
         if attr == 'value':
             raise PyllowSyntaxError(
-                f'Invalid syntax, missing {", ".join(values)}',
+                f'Invalid syntax, missing "{", ".join(values)}"',
                 self._stream.peek_prev().position
             )
 
@@ -96,7 +97,7 @@ class AST:
                 return False
 
             elif lhs.value in (CD.NOT, CD.PLUS, CD.MINUS):
-                if self._stream.peek_prev().type not in ('num', 'RPAREN', 'bool', 'id') and \
+                if not self._stream.peek_prev() or self._stream.peek_prev().type not in ('num', 'RPAREN', 'bool', 'id') and \
                         self._stream.peek_next() and \
                         self._stream.peek_next().type in ('num', 'id', 'bool'):
                     lhs = UnaryExpression.make(
@@ -139,7 +140,8 @@ class AST:
                     position=self._stream.current.position)
 
             token = self._stream.peek_next()
-            while token and token.type == 'op' and PRECEDENCE[token.value] > PRECEDENCE[op.value]:
+            while token and (token.type == 'op' and PRECEDENCE[token.value] > PRECEDENCE[op.value] or \
+                    token.value in RIGHT_ASSOC and PRECEDENCE[token.value] == PRECEDENCE[op.value]):
                 rhs = self._expression(rhs, PRECEDENCE[token.value])
                 token = self._stream.peek_next()
                 if self._stream.current.type == 'RPAREN':
@@ -163,6 +165,8 @@ class AST:
         if self._accept('id'):
             if self._accept('assign'):
                 value = self._expression(self._stream.current)
+                if not value:
+                    raise PyllowSyntaxError('Invalid syntax, expected expression', self._stream.current.position)
                 self._stream.next()
                 return AssignStatement(_id, value, position=self._stream.current.position)
             self._stream.prev()
@@ -186,7 +190,6 @@ class AST:
         elif self._expression():
             return True
 
-        #self._stream.next()
         return False
 
     def _call(self):
