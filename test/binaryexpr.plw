@@ -2,3 +2,4 @@ four = 1 + 6 / 2
 two = (four + four) / four
 ten = (two + two) * four / ((four + four + two) - (two * (two + two))) + two
 twenty = ((((2 + 2) * 2) + 2) * 2)
+sixtyfour = two^3 * two^3

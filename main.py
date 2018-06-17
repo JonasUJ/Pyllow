@@ -1,9 +1,10 @@
-from src.Lexer import Lexer
-from src.AST import AST
 from pprint import pprint
 
+from src.AST import AST
+from src.Lexer import Lexer
+
 lexer = Lexer()
-lexer.lex_file('test/Lexer_test.plw')
+lexer.lex_file('test/binaryexpr.plw')
 pprint(lexer.tokens)
 
 tree = AST(lexer.tokens)
