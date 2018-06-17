@@ -2,7 +2,7 @@
 
 
 from .chardef import CD
-from .Error import *
+from .Error import PyllowTypeError, PyllowValueError, PyllowZeroDivisionError
 
 
 class Datatype:
