@@ -52,7 +52,7 @@ RIGHT_ASSOC = (
 
 OPERATORS = _split(('+', '-', '*', '/', '^', '<', '>', '<=', '>=', '==', '!=', '&', '|', '!', '.'), 'op')
 ENCAPSULATORS = ('(', 'LPAREN'), (')', 'RPAREN'), ('{', 'BLOCKSTART'), ('}', 'BLOCKEND'), ('[', 'LISTSTART'), (']', 'LISTEND')
-RESERVED_KEYWORDS = _double(('if', 'else', 'null'))
+RESERVED_KEYWORDS = _split(('if', 'else', 'null'), 'kwd')
 MISC = ((',', 'sep'), ('true', 'bool'), ('false', 'bool'), ('=', 'assign'), ('EOF', 'EOF'))
 ALLCHARS = _flatten((OPERATORS, ENCAPSULATORS, RESERVED_KEYWORDS, MISC))
 ALLCHARSCLEAN = _flatten_first(ALLCHARS)

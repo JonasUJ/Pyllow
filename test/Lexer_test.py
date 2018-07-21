@@ -62,11 +62,11 @@ Token(position=(24, 1, 'test'), type="op", value=">=", subtype=None),
 Token(position=(25, 1, 'test'), type="op", value="==", subtype=None),
 Token(position=(26, 1, 'test'), type="op", value="!=", subtype=None),
 Token(position=(27, 0, 'test'), type="op", value="!", subtype=None),
-Token(position=(28, 1, 'test'), type="if", value="if", subtype=None),
-Token(position=(29, 3, 'test'), type="else", value="else", subtype=None),
+Token(position=(28, 1, 'test'), type="kwd", value="if", subtype=None),
+Token(position=(29, 3, 'test'), type="kwd", value="else", subtype=None),
 Token(position=(30, 3, 'test'), type="bool", value="true", subtype=None),
 Token(position=(31, 4, 'test'), type="bool", value="false", subtype=None),
-Token(position=(32, 3, 'test'), type="null", value="null", subtype=None),
+Token(position=(32, 3, 'test'), type="kwd", value="null", subtype=None),
 Token(position=(32, 7, 'test'), type="EOF", value="EOF", subtype=None))
 
 
