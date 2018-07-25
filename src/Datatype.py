@@ -56,6 +56,18 @@ class Datatype:
     def __ne__(self, other):
         return not self.__eq__(other)
 
+    def __gt__(self, other):
+        return self.value > other.value
+
+    def __ge__(self, other):
+        return self.value >= other.value
+
+    def __lt__(self, other):
+        return self.value < other.value
+
+    def __le__(self, other):
+        return self.value <= other.value
+
 
 class Float(Datatype):
     '''Float datatype'''
@@ -159,3 +171,7 @@ class Bool(Integer):
             self.value = 1
         else:
             self.value = 0
+
+    @property
+    def is_true(self):
+        return bool(self.value)
