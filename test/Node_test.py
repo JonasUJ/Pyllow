@@ -4,10 +4,11 @@ from unittest.mock import MagicMock
 from src.chardef import CD
 from src.Datatype import Bool, Float, Integer
 from src.Error import PyllowNameError, PyllowSyntaxError
-from src.Lexer import Token
+from src.Lexer import Lexer, Token
 from src.Node import (AdditionExpression, AssignStatement, BinaryExpression,
-                      DivisionExpression, MonoExpression,
-                      MultiplicationExpression, NegativeExpression, Node,
+                      BlockNode, DivisionExpression, EqualExpression,
+                      IfStatement, MonoExpression, MultiplicationExpression,
+                      NegativeExpression, Node, NotEqualExpression,
                       NotExpression, PositiveExpression, PowerExpression,
                       SubtractionExpression, TopNode, UnaryExpression, exprify)
 
@@ -15,6 +16,8 @@ POSITION = (1, 0, 'test')
 LEFT = exprify(Token(value='1', type='num', subtype='int', position=POSITION))
 RIGHT = exprify(Token(value='2', type='num', subtype='int', position=POSITION))
 BINEXPR = BinaryExpression(LEFT, RIGHT)
+TRUTHY = EqualExpression(LEFT, LEFT)
+FALSY = NotEqualExpression(LEFT, LEFT)
 
 TOKEN = Token(value='test', type='id', position=POSITION)
 MONOEXPRESSION = MonoExpression.make(TOKEN)
@@ -184,6 +187,35 @@ class AssignStatementTest(unittest.TestCase):
         self.node.process()
         self.assertEqual(self.node.parent._scope['test'], LEFT.process())
 
+
+class IfStatementTest(unittest.TestCase):
+
+    def setUp(self):
+        self.node = IfStatement(EqualExpression(exprify(Token(value='1', type='num', subtype='int', position=POSITION)), exprify(Token(value='2', type='num', subtype='int', position=POSITION))),
+            BlockNode(AssignStatement('test', LEFT)),
+            IfStatement(
+                EqualExpression(exprify(Token(value='1', type='num', subtype='int', position=POSITION)), exprify(Token(value='2', type='num', subtype='int', position=POSITION))),
+                BlockNode(AssignStatement('test', LEFT)),
+                IfStatement(
+                    NotEqualExpression(exprify(Token(value='1', type='num', subtype='int', position=POSITION)), exprify(Token(value='2', type='num', subtype='int', position=POSITION))),
+                    BlockNode(AssignStatement('test', RIGHT)), False)
+            ),
+        parent=TopNode())
+    
+    def tearDown(self):
+        del self.node
+        
+    def test_condition(self):
+        self.assertEqual(self.node.condition.process(), False)
+
+    def test_block(self):
+        self.node.block.process()
+        self.assertEqual(self.node.parent._scope['test'], LEFT.process())
+    
+    def test_logic(self):
+        self.node.process()
+        self.assertEqual(self.node.parent._scope['test'], RIGHT.process())
+        
 
 if __name__ == '__main__':
     unittest.main()
