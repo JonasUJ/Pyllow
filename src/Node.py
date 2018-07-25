@@ -23,6 +23,7 @@ class Node:
     '''
 
     _IS_SCOPE = True
+    _IS_PARENT = True
 
     def __init__(self, *args, **kwargs):
         self.parent = kwargs.pop('parent', None)
@@ -156,8 +157,18 @@ class Node:
         '''
 
         for child in self.children:
+            self._set_self_as_parent(child)
             child._set_parents()
-            child.parent = self
+
+    def _set_self_as_parent(self, node) -> None:
+        '''
+        Set the parent of `node` depending on `_IS_PARENT`
+        '''
+
+        if self._IS_PARENT:
+            node.parent = self
+        else:
+            self.parent._set_self_as_parent(node)
 
     def process(self):
         '''
@@ -199,6 +210,13 @@ class TopNode(Node):
             else:
                 del self.children[i]
                 i -= 1
+
+
+class BlockNode(TopNode):
+    '''The first node in a sub-tree'''
+
+    _IS_SCOPE = False
+    _IS_PARENT = False
 
 
 class Expression(Node):
@@ -258,7 +276,16 @@ class BinaryExpression(Expression):
             CD.MINUS:SubtractionExpression,
             CD.ASTERISK:MultiplicationExpression,
             CD.DIVISION:DivisionExpression,
-            CD.POWER:PowerExpression
+            CD.POWER:PowerExpression,
+            CD.EQ:EqualExpression,
+            CD.NE:NotEqualExpression,
+            CD.AND:AndExpression,
+            CD.OR:OrExpression,
+            CD.NOT:NotExpression,
+            CD.GT:GreaterThanExpression,
+            CD.LT:LessThanExpression,
+            CD.GE:GreaterThanEqualExpression,
+            CD.LE:LessThanEqualExpression
         }[op](lhs, rhs, *args, **kwargs)
 
     def _op(self, lhs, rhs):
@@ -412,6 +439,62 @@ class PowerExpression(BinaryExpression):
         return lhs ** rhs
 
 
+class EqualExpression(BinaryExpression):
+    '''EqualExpression for equality expressions'''
+
+    def _op(self, lhs, rhs):
+        return lhs == rhs
+
+
+class NotEqualExpression(BinaryExpression):
+    '''NotEqualExpression for non-equality expressions'''
+
+    def _op(self, lhs, rhs):
+        return lhs != rhs
+
+
+class AndExpression(BinaryExpression):
+    '''AndExpression for and expressions'''
+
+    def _op(self, lhs, rhs):
+        return lhs and rhs
+
+
+class OrExpression(BinaryExpression):
+    '''OrExpression for or expressions'''
+
+    def _op(self, lhs, rhs):
+        return lhs or rhs
+
+
+class GreaterThanExpression(BinaryExpression):
+    '''GreaterThanExpression for greater-than expressions'''
+
+    def _op(self, lhs, rhs):
+        return lhs > rhs
+
+
+class LessThanExpression(BinaryExpression):
+    '''LessThanExpression for less-than expressions'''
+
+    def _op(self, lhs, rhs):
+        return lhs < rhs
+
+
+class GreaterThanEqualExpression(BinaryExpression):
+    '''GreaterThanEqualExpression for greater-than-equal expressions'''
+
+    def _op(self, lhs, rhs):
+        return lhs >= rhs
+
+
+class LessThanEqualExpression(BinaryExpression):
+    '''LessThanEqualExpression for less-than-equal expressions'''
+
+    def _op(self, lhs, rhs):
+        return lhs <= rhs
+
+
 class UnaryExpression(Expression):
     '''
     For unary expressions
@@ -526,8 +609,41 @@ class AssignStatement(Statement):
 
 
 class IfStatement(Statement):
-    '''For `if` statements'''
+    '''
+    For if/else if/else statements
 
-    def __init__(self, *args, **kwargs):
+    Parameters
+    ----------
+    condition : Expression
+        An expression that when evaluated determines
+        if `self.block` is processed 
+    block : BlockNode
+        A BlockNode with the contents of the if statement
+    alt : IfStatement, BlockNode
+        If the condition evalutes to a falsy value, this
+        IfStatement/BlockNode will be processed
+    '''
+
+    _IS_SCOPE = False
+
+    def __init__(self, condition, block, alt, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.condition = condition
+        self.block = block
+        self.alt = alt
+        if self.alt:
+            self.alt.parent = self
+        self.block.parent = self
+        self.condition.parent = self
+        self.condition._set_parents()
+
+    def process(self):
+        self.condition = self.condition.process()
+        if self.condition:
+            self.block.process()
+        elif self.alt:
+            self.alt.process()
+
+    def __repr__(self):
+        return f'<{self.__class__.__name__}: condition="{self.condition}", len(block)={len(self.block.children)}, bool(alt)={bool(self.alt)}>'
         
