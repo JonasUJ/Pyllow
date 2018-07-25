@@ -3,8 +3,9 @@
 from .chardef import CD, PRECEDENCE, RIGHT_ASSOC
 from .Datatype import Bool, Float, Integer
 from .Error import PyllowException, PyllowSyntaxError, error
-from .Node import (AssignStatement, BinaryExpression, CallExpression,
-                   Expression, TopNode, UnaryExpression, exprify)
+from .Node import (AssignStatement, BinaryExpression, BlockNode,
+                   CallExpression, Expression, IfStatement, TopNode,
+                   UnaryExpression, exprify)
 from .Stream import Stream
 
 
@@ -23,7 +24,7 @@ class AST:
     def parse(self):
         self._stream.next()
         try:
-            while self._statement():
+            while self._statement(self.tree):
                 pass
             if self._stream.is_not_finished:
                 error(PyllowSyntaxError('Invalid syntax', self._stream.current.position))
@@ -67,8 +68,8 @@ class AST:
     def _expression(self, nlhs=False, precedence=0):
 
         def check_syntax():
-            if not isinstance(lhs, Expression) and lhs.type not in ('num', 'id', 'bool') or \
-                rhs and not isinstance(rhs, Expression) and rhs.type not in ('num', 'id', 'bool'):
+            if not isinstance(lhs, Expression) and lhs.type not in ('num', 'id', 'bool', 'str', 'kwd') or \
+                rhs and not isinstance(rhs, Expression) and rhs.type not in ('num', 'id', 'bool', 'str', 'kwd'):
                 if self._stream.current.type == 'EOF':
                     raise PyllowSyntaxError('Invalid syntax', self._stream.peek_prev().position)
                 raise PyllowSyntaxError('Invalid syntax', self._stream.current.position)
@@ -172,19 +173,19 @@ class AST:
             self._stream.prev()
         return False
 
-    def _statement(self):
+    def _statement(self, tree):
 
         assign = self._assignment()
         if assign:
-            self.tree.add_child(assign)
+            tree.add_child(assign)
             return True
 
         elif self._accept(('num', 'id', 'bool', 'op')):
-            self.tree.add_child(self._expression())
+            tree.add_child(self._expression())
             return True
 
         elif self._accept(CD.IF, attr='value'):
-            self.tree.add_child(self._if())
+            tree.add_child(self._if())
             return True
 
         elif self._expression():
@@ -213,13 +214,27 @@ class AST:
             self._stream.prev()
         return False
 
-    def _if(self):
-        cond = self._expression()
-        if not cond:
-            raise PyllowSyntaxError('Invalid syntax: missing condition',
-                self._stream.peek_prev().position
-            )
+    def _get_block(self):
         self._expect(CD.BLOCKSTART, attr='value')
-        while self._statement():
-            pass
-        self._expect(CD.BLOCKEND, attr='value')
+        block = BlockNode()
+        while True:
+            if not self._accept(CD.BLOCKEND, attr='value'):
+                if not self._statement(block):
+                    self._expect(CD.BLOCKEND, attr='value')
+            else:
+                break
+        return block
+
+    def _if(self):
+        cond = self._expression(self._stream.current)
+        self._stream.next()
+        block = self._get_block()
+
+        alt = False
+        if self._accept(CD.ELSE, attr='value'):
+            if self._accept(CD.IF, attr='value'):
+                alt = self._if()
+            else:
+                alt = self._get_block()
+        return IfStatement(cond, block, alt)
+
