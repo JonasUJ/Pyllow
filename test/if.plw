@@ -1,0 +1,10 @@
+bool = true
+worked = 0
+
+if true {
+    worked = 1
+} else if bool == false {
+    worked = 2
+} else {
+    worked = 3
+}
