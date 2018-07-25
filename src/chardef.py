@@ -39,7 +39,7 @@ PRECEDENCE = {
     CD.OR: 2,
     CD.AND: 3,
     CD.NOT: 4,
-    CD.LT: 7, CD.GT: 7, CD.LE: 7, CD.GT: 7, CD.EQ: 7, CD.NE: 7,
+    CD.LT: 7, CD.GT: 7, CD.LE: 7, CD.GE: 7, CD.EQ: 7, CD.NE: 7,
     CD.PLUS: 10, CD.MINUS: 10,
     CD.ASTERISK: 20, CD.DIVISION: 20,
     CD.POWER: 25,
