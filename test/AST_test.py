@@ -1,12 +1,17 @@
 import unittest
 
 from src.AST import AST, TokenStream
+from src.chardef import CD
 from src.Error import PyllowSyntaxError
 from src.Lexer import Lexer, Token
-from src.Node import (AdditionExpression, AssignStatement, DivisionExpression,
+from src.Node import (AdditionExpression, AndExpression, AssignStatement,
+                      BlockNode, DivisionExpression, EqualExpression,
+                      GreaterThanEqualExpression, GreaterThanExpression,
+                      IfStatement, LessThanEqualExpression, LessThanExpression,
                       MonoExpression, MultiplicationExpression,
-                      NegativeExpression, NotExpression, PositiveExpression,
-                      PowerExpression, SubtractionExpression)
+                      NegativeExpression, NotEqualExpression, NotExpression,
+                      OrExpression, PositiveExpression, PowerExpression,
+                      SubtractionExpression)
 
 POSITION = (1, 0, 'test')
 KWARGS = {
@@ -266,6 +271,94 @@ class ASTTest(unittest.TestCase):
         expr = self.tree._expression(self.tree._stream.current)
         self.assertEqual(expr, structure)
 
+    def test__expression_EQ(self):
+        self.set_stream('1 == 2')
+        structure = make_tree(
+            (EqualExpression, (
+                (MonoExpression, None),
+                (MonoExpression, None)
+            ))
+        )
+        expr = self.tree._expression(self.tree._stream.current)
+        self.assertEqual(expr, structure)
+
+    def test__expression_NE(self):
+        self.set_stream('1 != 2')
+        structure = make_tree(
+            (NotEqualExpression, (
+                (MonoExpression, None),
+                (MonoExpression, None)
+            ))
+        )
+        expr = self.tree._expression(self.tree._stream.current)
+        self.assertEqual(expr, structure)
+
+    def test__expression_AND(self):
+        self.set_stream('1 & 2')
+        structure = make_tree(
+            (AndExpression, (
+                (MonoExpression, None),
+                (MonoExpression, None)
+            ))
+        )
+        expr = self.tree._expression(self.tree._stream.current)
+        self.assertEqual(expr, structure)
+
+    def test__expression_OR(self):
+        self.set_stream('1 | 2')
+        structure = make_tree(
+            (OrExpression, (
+                (MonoExpression, None),
+                (MonoExpression, None)
+            ))
+        )
+        expr = self.tree._expression(self.tree._stream.current)
+        self.assertEqual(expr, structure)
+
+    def test__expression_GT(self):
+        self.set_stream('1 > 2')
+        structure = make_tree(
+            (GreaterThanExpression, (
+                (MonoExpression, None),
+                (MonoExpression, None)
+            ))
+        )
+        expr = self.tree._expression(self.tree._stream.current)
+        self.assertEqual(expr, structure)
+
+    def test__expression_LT(self):
+        self.set_stream('1 < 2')
+        structure = make_tree(
+            (LessThanExpression, (
+                (MonoExpression, None),
+                (MonoExpression, None)
+            ))
+        )
+        expr = self.tree._expression(self.tree._stream.current)
+        self.assertEqual(expr, structure)
+
+    def test__expression_GE(self):
+        self.set_stream('1 >= 2')
+        structure = make_tree(
+            (GreaterThanEqualExpression, (
+                (MonoExpression, None),
+                (MonoExpression, None)
+            ))
+        )
+        expr = self.tree._expression(self.tree._stream.current)
+        self.assertEqual(expr, structure)
+
+    def test__expression_LE(self):
+        self.set_stream('1 <= 2')
+        structure = make_tree(
+            (LessThanEqualExpression, (
+                (MonoExpression, None),
+                (MonoExpression, None)
+            ))
+        )
+        expr = self.tree._expression(self.tree._stream.current)
+        self.assertEqual(expr, structure)
+
     def test__expression_negative(self):
         self.set_stream('-1')
         structure = make_tree(
@@ -342,8 +435,73 @@ class ASTTest(unittest.TestCase):
         with self.assertRaises(PyllowSyntaxError):
             self.tree._assignment()
 
+    def test__get_block(self):
+        self.set_stream('{assign1 = 1 assign2 = 2}')
+        structure = make_tree(
+            (BlockNode, (
+                (AssignStatement, (MonoExpression, None)),
+                (AssignStatement, (MonoExpression, None))
+            ))
+        )
+        block = self.tree._get_block()
+        self.assertEqual(block, structure)
 
-    # Missing _statement, _call, _if because their logic is not finished
+    def test__if(self):
+        self.set_stream('if true {}')
+        self.tree._accept(CD.IF, attr='value')
+        expr = self.tree._if()
+        self.assertFalse(expr.alt)
+        self.assertTrue(expr.condition.value)
+
+    def test__if_block(self):
+        self.set_stream('if true {test = 0}')
+        self.tree._accept(CD.IF, attr='value')
+        structure = make_tree(
+            (AssignStatement, (MonoExpression, None))
+        )
+        expr = self.tree._if()
+        self.assertEqual(expr.block.children[0], structure)
+
+    def test__if_condition(self):
+        self.set_stream('if 1 == 0 | 1 != 0 {}')
+        self.tree._accept(CD.IF, attr='value')
+        structure = make_tree(
+            (OrExpression, (
+                (EqualExpression, (
+                    (MonoExpression, None),
+                    (MonoExpression, None))
+                ),
+                (NotEqualExpression, (
+                    (MonoExpression, None),
+                    (MonoExpression, None))
+                )
+            ))
+        )
+        expr = self.tree._if()
+        self.assertEqual(expr.condition, structure)
+
+    def test__if_else(self):
+        self.set_stream('if true {} else {test = 0}')
+        self.tree._accept(CD.IF, attr='value')
+        structure = make_tree(
+            (AssignStatement, (MonoExpression, None))
+        )
+        expr = self.tree._if()
+        self.assertEqual(expr.alt.children[0], structure)
+
+    def test__if_else_if(self):
+        self.set_stream('if true {} else if true {test = 0}')
+        self.tree._accept(CD.IF, attr='value')
+        structure = make_tree(
+            (AssignStatement, (MonoExpression, None))
+        )
+        expr = self.tree._if()
+        self.assertEqual(expr.alt.block.children[0], structure)
+
+    
+        
+
+    # Missing _statement, _call because their logic is not finished
 
 
 
