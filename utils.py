@@ -1,8 +1,10 @@
+from typing import List
+
 from src.AST import AST
-from src.Lexer import Lexer
+from src.Lexer import Lexer, Token
 
 
-def get_tokens_from_raw(raw):
+def get_tokens_from_raw(raw:str) -> List[Token]:
     '''
     Get a list of tokens from raw text
 
@@ -24,7 +26,7 @@ def get_tokens_from_raw(raw):
     lexer = Lexer()
     return lexer.lex(raw)
 
-def get_AST_from_raw(raw):
+def get_AST_from_raw(raw:str) -> AST:
     '''
     Get an AST from raw text
 
@@ -44,7 +46,7 @@ def get_AST_from_raw(raw):
 
     return AST(get_tokens_from_raw(raw))
 
-def get_parsed_AST_from_raw(raw):
+def get_parsed_AST_from_raw(raw:str) -> AST:
     '''
     Get a TopNode from raw text
 
@@ -66,7 +68,7 @@ def get_parsed_AST_from_raw(raw):
     tree.parse()
     return tree
 
-def execute_from_raw(raw):
+def execute_from_raw(raw:str) -> None:
     '''
     Execute Pyllow code from raw text
 
