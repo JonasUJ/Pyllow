@@ -12,11 +12,8 @@ ERROR_MSG = '''
 def error(err, prints=True):
     '''Print an error msg formatted to ERROR_MSG from `err`'''
 
-    with open(err.position[2]) as fp:
-        line = fp.readlines()[err.position[0]-1].strip('\n')
-
     error_formatted = ERROR_MSG.format(
-        line=line,
+        line=err.position[3],
         col=' '*(err.position[1]),
         lineno=err.position[0],
         path=err.position[2],

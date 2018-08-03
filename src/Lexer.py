@@ -58,7 +58,7 @@ class RawStream(Stream):
         return self.current
 
     def position(self):
-        return self._lineno, self._columnno, self.path
+        return self._lineno, self._columnno, self.path, self._stream.split('\n')[self._lineno-1]
 
 
 class Token:

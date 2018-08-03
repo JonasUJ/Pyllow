@@ -2,7 +2,7 @@ import unittest
 from src.Error import error, PyllowException
 
 
-ERROR = PyllowException(position=(1, 3, 'test/Error_test.plw'), errormsg='test error')
+ERROR = PyllowException(position=(1, 3, 'test/Error_test.plw', 'test'), errormsg='test error')
 ERROR_MSG = '''
 test/Error_test.plw
 PyllowException occurred on line 1

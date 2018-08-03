@@ -36,38 +36,38 @@ false
 null'''
 
 TOKENS = (
-Token(position=(2, 2, 'test'), type="id", value="id", subtype=None),
-Token(position=(3, 2, 'test'), type="num", value="123", subtype="int"),
-Token(position=(4, 3, 'test'), type="num", value="45.6", subtype="float"),
-Token(position=(5, 12, 'test'), type="str", value="string +-*/", subtype=None),
-Token(position=(6, 0, 'test'), type="op", value="+", subtype=None),
-Token(position=(7, 0, 'test'), type="op", value="-", subtype=None),
-Token(position=(8, 0, 'test'), type="op", value="*", subtype=None),
-Token(position=(9, 0, 'test'), type="op", value="/", subtype=None),
-Token(position=(10, 0, 'test'), type="op", value="^", subtype=None),
-Token(position=(11, 0, 'test'), type="assign", value="=", subtype=None),
-Token(position=(12, 0, 'test'), type="LPAREN", value="(", subtype=None),
-Token(position=(13, 0, 'test'), type="RPAREN", value=")", subtype=None),
-Token(position=(14, 0, 'test'), type="LISTSTART", value="[", subtype=None),
-Token(position=(15, 0, 'test'), type="LISTEND", value="]", subtype=None),
-Token(position=(16, 0, 'test'), type="BLOCKSTART", value="{", subtype=None),
-Token(position=(17, 0, 'test'), type="BLOCKEND", value="}", subtype=None),
-Token(position=(18, 0, 'test'), type="op", value=".", subtype=None),
-Token(position=(19, 0, 'test'), type="op", value="|", subtype=None),
-Token(position=(20, 0, 'test'), type="op", value="&", subtype=None),
-Token(position=(21, 0, 'test'), type="op", value="<", subtype=None),
-Token(position=(22, 0, 'test'), type="op", value=">", subtype=None),
-Token(position=(23, 1, 'test'), type="op", value="<=", subtype=None),
-Token(position=(24, 1, 'test'), type="op", value=">=", subtype=None),
-Token(position=(25, 1, 'test'), type="op", value="==", subtype=None),
-Token(position=(26, 1, 'test'), type="op", value="!=", subtype=None),
-Token(position=(27, 0, 'test'), type="op", value="!", subtype=None),
-Token(position=(28, 1, 'test'), type="kwd", value="if", subtype=None),
-Token(position=(29, 3, 'test'), type="kwd", value="else", subtype=None),
-Token(position=(30, 3, 'test'), type="bool", value="true", subtype=None),
-Token(position=(31, 4, 'test'), type="bool", value="false", subtype=None),
-Token(position=(32, 3, 'test'), type="kwd", value="null", subtype=None),
-Token(position=(32, 7, 'test'), type="EOF", value="EOF", subtype=None))
+Token(position=(2, 2, 'test', 'id'), type="id", value="id", subtype=None),
+Token(position=(3, 2, 'test', '123'), type="num", value="123", subtype="int"),
+Token(position=(4, 3, 'test', '45.6'), type="num", value="45.6", subtype="float"),
+Token(position=(5, 12, 'test', '"string +-*/"'), type="str", value="string +-*/", subtype=None),
+Token(position=(6, 0, 'test', '+'), type="op", value="+", subtype=None),
+Token(position=(7, 0, 'test', '-'), type="op", value="-", subtype=None),
+Token(position=(8, 0, 'test', '*'), type="op", value="*", subtype=None),
+Token(position=(9, 0, 'test', '/'), type="op", value="/", subtype=None),
+Token(position=(10, 0, 'test', '^'), type="op", value="^", subtype=None),
+Token(position=(11, 0, 'test', '='), type="assign", value="=", subtype=None),
+Token(position=(12, 0, 'test', '('), type="LPAREN", value="(", subtype=None),
+Token(position=(13, 0, 'test', ')'), type="RPAREN", value=")", subtype=None),
+Token(position=(14, 0, 'test', '['), type="LISTSTART", value="[", subtype=None),
+Token(position=(15, 0, 'test', ']'), type="LISTEND", value="]", subtype=None),
+Token(position=(16, 0, 'test', '{'), type="BLOCKSTART", value="{", subtype=None),
+Token(position=(17, 0, 'test', '}'), type="BLOCKEND", value="}", subtype=None),
+Token(position=(18, 0, 'test', '.'), type="op", value=".", subtype=None),
+Token(position=(19, 0, 'test', '|'), type="op", value="|", subtype=None),
+Token(position=(20, 0, 'test', '&'), type="op", value="&", subtype=None),
+Token(position=(21, 0, 'test', '<'), type="op", value="<", subtype=None),
+Token(position=(22, 0, 'test', '>'), type="op", value=">", subtype=None),
+Token(position=(23, 1, 'test', '<='), type="op", value="<=", subtype=None),
+Token(position=(24, 1, 'test', '>='), type="op", value=">=", subtype=None),
+Token(position=(25, 1, 'test', '=='), type="op", value="==", subtype=None),
+Token(position=(26, 1, 'test', '!='), type="op", value="!=", subtype=None),
+Token(position=(27, 0, 'test', '!'), type="op", value="!", subtype=None),
+Token(position=(28, 1, 'test', 'if'), type="kwd", value="if", subtype=None),
+Token(position=(29, 3, 'test', 'else'), type="kwd", value="else", subtype=None),
+Token(position=(30, 3, 'test', 'true'), type="bool", value="true", subtype=None),
+Token(position=(31, 4, 'test', 'false'), type="bool", value="false", subtype=None),
+Token(position=(32, 3, 'test', 'null EOF '), type="kwd", value="null", subtype=None),
+Token(position=(32, 7, 'test', 'null EOF '), type="EOF", value="EOF", subtype=None))
 
 
 class RawStreamTest(unittest.TestCase):
@@ -126,11 +126,11 @@ class RawStreamTest(unittest.TestCase):
         self.assertEqual(self.stream._columnno, 0)
 
     def test_position(self):
-        self.assertTupleEqual(self.stream.position(), (1, 0, 'test'))
+        self.assertTupleEqual(self.stream.position(), (1, 0, 'test', ' # comment'))
         self.stream.skip(11)
-        self.assertTupleEqual(self.stream.position(), (2, 0, 'test'))
+        self.assertTupleEqual(self.stream.position(), (2, 0, 'test', 'id'))
         self.stream.next()
-        self.assertTupleEqual(self.stream.position(), (2, 1, 'test'))
+        self.assertTupleEqual(self.stream.position(), (2, 1, 'test', 'id'))
 
 
 class LexerTest(unittest.TestCase):
